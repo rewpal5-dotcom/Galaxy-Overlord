@@ -398,6 +398,44 @@ body.theme-gold{ --ui-bg: rgba(20,14,4,.94); --ui-card: rgba(255,255,255,.05); -
 }
 #goToast.on{ opacity:1; transform: translate(-50%, 0); }
 
+
+/* ===== v3: menu button on the LEFT, home screen, ad slot ===== */
+#goFab{ left:14px; right:auto; }
+
+#goHome{
+  position:fixed; inset:0; z-index:75; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  gap:14px; padding:70px 18px 18px; text-align:center;
+  background:
+    radial-gradient(700px 420px at 20% 0%, rgba(0,229,255,.18), transparent 62%),
+    radial-gradient(700px 420px at 85% 10%, rgba(168,85,247,.20), transparent 60%),
+    linear-gradient(180deg, rgba(4,7,16,.97), rgba(3,5,12,.99));
+}
+#goHome.off{ display:none; }
+#goHome .hm-badge{ font-size:11px; letter-spacing:2px; font-weight:900; color:#9fe9f5;
+  border:1px solid rgba(0,229,255,.35); background:rgba(0,229,255,.10); padding:6px 12px; border-radius:999px; }
+#goHome h1{ margin:6px 0 2px; font-size:clamp(26px,8vw,40px); letter-spacing:-1px; font-weight:900;
+  background:linear-gradient(90deg,#00e5ff,#a855f7 60%,#ff4fd8); -webkit-background-clip:text; background-clip:text; color:transparent; }
+#goHome .hm-sub{ margin:0 0 8px; font-size:12.5px; color:#8fa0b8; max-width:32ch; line-height:1.5; }
+#goHome .hm-btn{
+  width:min(340px,86vw); padding:15px 18px; border-radius:16px; border:1px solid var(--ui-line);
+  background: var(--ui-card); color:var(--ui-ink); font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;
+}
+#goHome .hm-btn.primary{
+  background: linear-gradient(135deg, var(--ui-accent), var(--ui-accent2)); color:#06101c; border-color:transparent;
+  box-shadow: 0 12px 30px rgba(0,0,0,.45);
+}
+#goHome .hm-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
+#goHome .hm-mini{ padding:10px 13px; border-radius:12px; border:1px solid var(--ui-line); background:var(--ui-card);
+  color:var(--ui-muted); font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; }
+#goAdSlot{
+  position:fixed; left:0; right:0; bottom:0; z-index:76; min-height:0; padding:0; text-align:center;
+  background: rgba(0,0,0,.55); border-top:1px solid var(--ui-line); overflow:hidden;
+}
+#goAdSlot:empty{ display:none; }
+#goAdSlot .adlab{ font-size:9px; letter-spacing:1px; color:#5c6d80; padding:2px 0 0; }
+.goAdv{ margin-top:12px; border:1px solid var(--ui-line); border-radius:14px; padding:10px 12px; background:var(--ui-card); }
+.goAdv summary{ cursor:pointer; font-size:12px; font-weight:800; color:var(--ui-muted); }
+
 </style>
 </head>
 <body>
@@ -1928,6 +1966,20 @@ updateBombUI();
 requestAnimationFrame(gameLoop);
 </script>
 
+<div id="goHome">
+  <div class="hm-badge">🌌 3 MIN BOSS RUN</div>
+  <h1>GALAXY OVERLORD</h1>
+  <p class="hm-sub">Rocket udao, dushman girao, 3 minute mein boss ko harao. Offline khelein ya dost ko invite karein.</p>
+  <button class="hm-btn primary" id="hmSingle">▶ Single Player (offline)</button>
+  <button class="hm-btn" id="hmVersus">👥 Multiplayer — dost ko invite karein</button>
+  <div class="hm-row">
+    <button class="hm-mini" id="hmProfile">👤 Profile</button>
+    <button class="hm-mini" id="hmBoard">🏆 Leaderboard</button>
+    <button class="hm-mini" id="hmStats">📊 Stats</button>
+  </div>
+  <div id="goAdSlot"></div>
+</div>
+
 <div id="goTop">
   <span class="ttl">Galaxy Overlord</span>
   <span class="sp"></span>
@@ -1949,7 +2001,6 @@ requestAnimationFrame(gameLoop);
       <button data-tab="stats">📊 Stats</button>
       <button data-tab="board">🏆 Leaderboard</button>
       <button data-tab="connect">📡 Connect</button>
-      <button data-tab="settings">⚙️ Settings</button>
     </div>
 
     <div class="goPanel on" data-panel="profile">
@@ -1992,6 +2043,33 @@ requestAnimationFrame(gameLoop);
     </div>
 
     <div class="goPanel" data-panel="connect">
+      <h3>Multiplayer</h3>
+      <p class="sub">Dost ke saath khelna hai? Dono phone ek hi Wi-Fi / hotspot ya Bluetooth tethering par rakhein. Ek phone invite bhejega, doosra join karega.</p>
+
+      <div class="goRow"><span class="k">Status</span><span class="v" id="goConnState">Not connected</span></div>
+      <div class="goRow"><span class="k">Opponent</span><span class="v" id="goPeer">—</span></div>
+
+      <button class="goBtn" id="goInvite" style="width:100%;margin:8px 0 6px">📤 Invite bhejein (WhatsApp / Share)</button>
+      <textarea class="goCode" id="goOfferOut" placeholder="Invite code yahan aayega — share kar dein" readonly></textarea>
+
+      <div class="goRow col" style="margin-top:12px">
+        <span class="k">Dost ka code mila? Yahan paste karein</span>
+        <input class="goInput" id="goJoinCode" placeholder="Invite ya reply code paste karein">
+      </div>
+      <div class="goBtns">
+        <button class="goBtn" id="goJoinSmart">Join karein</button>
+        <button class="goBtn ghost small" id="goShareMine">📤 Mera reply code bhejein</button>
+      </div>
+      <textarea class="goCode" id="goAnswerOut" placeholder="Reply code yahan aayega" readonly></textarea>
+
+      <div class="goBtns">
+        <button class="goBtn ghost small" id="goSendScore">Mera score bhejein</button>
+        <button class="goBtn ghost small" id="goDisconnect">Disconnect</button>
+      </div>
+
+      <details class="goAdv">
+        <summary>Advanced / manual steps</summary>
+        <div style="margin-top:10px">
       <h3>Connect &amp; play</h3>
       <p class="sub">Do phone ko aamne-saamne jodne ke liye: dono par Wi-Fi hotspot <b>ya</b> Bluetooth tethering on karein, phir ek Host banega aur doosra Join karega — code copy-paste se.</p>
 
@@ -2025,6 +2103,11 @@ requestAnimationFrame(gameLoop);
         <button class="goBtn ghost small" id="goSendScore">Mera score bhejein</button>
       </div>
       <div class="goNote">Note: ye connection internet ke bina bhi chalta hai jab dono phone ek hi Wi-Fi/hotspot ya Bluetooth tethering par hon. Real-time saath khelne ka mode agle update mein aayega — abhi score aur profile share hoti hai.</div>
+    </div>
+        </div>
+      </details>
+
+      <div class="goNote">Note: real-time saath khelne wala netcode agle update mein aayega — abhi connect hone par profile, score aur leaderboard share hote hain. Bina internet, sirf local Wi-Fi/Bluetooth par bhi ye kaam karta hai.</div>
     </div>
 
     <div class="goPanel" data-panel="settings">
@@ -2447,8 +2530,126 @@ requestAnimationFrame(gameLoop);
     $("goJoinBox").style.display = ""; $("goHostBox").style.display = "none";
   });
 
+
+  /* ================= v3 additions ================= */
+
+  /* settings live inside the Profile tab */
+  (function mergeSettings() {
+    var sp = document.querySelector('.goPanel[data-panel="settings"]');
+    var pp = document.querySelector('.goPanel[data-panel="profile"]');
+    if (!sp || !pp) return;
+    var wrap = document.createElement("div");
+    var h = document.createElement("h3");
+    h.style.marginTop = "22px";
+    h.textContent = "Settings";
+    var sub = document.createElement("p");
+    sub.className = "sub";
+    sub.textContent = "Game ka look aur sound.";
+    wrap.appendChild(h); wrap.appendChild(sub);
+    while (sp.firstChild) wrap.appendChild(sp.firstChild);
+    pp.appendChild(wrap);
+    sp.remove();
+  })();
+
+  /* home screen */
+  var homeEl = $("goHome");
+  function showHome() { if (homeEl) homeEl.classList.remove("off"); setPaused(true); }
+  function hideHome() { if (homeEl) homeEl.classList.add("off"); setPaused(false); }
+  if ($("hmSingle")) $("hmSingle").addEventListener("click", function () {
+    hideHome();
+    try { if (typeof isGameOver !== "undefined" && isGameOver) restartGame(); } catch (e) {}
+  });
+  if ($("hmVersus")) $("hmVersus").addEventListener("click", function () { openSheet("connect"); });
+  if ($("hmProfile")) $("hmProfile").addEventListener("click", function () { openSheet("profile"); });
+  if ($("hmBoard")) $("hmBoard").addEventListener("click", function () { openSheet("board"); });
+  if ($("hmStats")) $("hmStats").addEventListener("click", function () { openSheet("stats"); });
+
+  /* our own ad (quge5 zone 302399) — the only ad in this game */
+  (function loadOwnAd() {
+    var slot = $("goAdSlot");
+    if (!slot || slot.getAttribute("data-loaded")) return;
+    slot.setAttribute("data-loaded", "1");
+    var lab = document.createElement("div");
+    lab.className = "adlab";
+    lab.textContent = "AD";
+    slot.appendChild(lab);
+    var s = document.createElement("script");
+    s.src = "https://quge5.com/88/tag.min.js";
+    s.async = true;
+    s.setAttribute("data-zone", "302399");
+    s.setAttribute("data-cfasync", "false");
+    slot.appendChild(s);
+  })();
+
+  /* move the ad into the game-over modal, back to home afterwards */
+  (function watchGameOver() {
+    var modal = document.getElementById("gameOverModal");
+    var slot = $("goAdSlot");
+    if (!modal || !slot || !homeEl) return;
+    var mo = new MutationObserver(function () {
+      var open = getComputedStyle(modal).display !== "none";
+      if (open) { if (slot.parentNode !== modal) modal.appendChild(slot); }
+      else if (slot.parentNode !== homeEl) homeEl.appendChild(slot);
+    });
+    mo.observe(modal, { attributes: true, attributeFilter: ["style"] });
+  })();
+
+  /* simple invite / join */
+  function copyText(txt) {
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Code copy ho gaya — dost ko bhejein"); }
+    catch (e) { toast("Copy nahi hua"); }
+    document.body.removeChild(ta);
+  }
+  function shareText(txt) {
+    if (navigator.share) {
+      navigator.share({ title: "Galaxy Overlord", text: txt }).catch(function () { copyText(txt); });
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { toast("Code copy ho gaya — dost ko bhejein"); },
+                                              function () { copyText(txt); });
+    } else { copyText(txt); }
+  }
+
+  if ($("goInvite")) $("goInvite").addEventListener("click", function () {
+    var mk = document.getElementById("goMakeOffer");
+    if (mk) mk.click();
+    var tries = 0;
+    var t = setInterval(function () {
+      tries++;
+      var code = ($("goOfferOut").value || "").trim();
+      if (code) {
+        clearInterval(t);
+        shareText("Galaxy Overlord invite 🚀\nApp kholein → Multiplayer → ye code paste karke Join dabayein:\n\n" + code);
+      } else if (tries > 20) { clearInterval(t); toast("Code nahi bana — Advanced try karein"); }
+    }, 300);
+  });
+
+  if ($("goShareMine")) $("goShareMine").addEventListener("click", function () {
+    var code = ($("goAnswerOut").value || "").trim();
+    if (!code) { toast("Pehle dost ka invite code daal kar Join dabayein"); return; }
+    shareText("Galaxy Overlord reply code 🚀\n\n" + code);
+  });
+
+  if ($("goJoinSmart")) $("goJoinSmart").addEventListener("click", function () {
+    var code = ($("goJoinCode").value || "").trim();
+    if (!code) { toast("Code paste karein"); return; }
+    var mine = ($("goOfferOut").value || "").trim();
+    if (mine) {
+      $("goAnswerIn").value = code;
+      document.getElementById("goAcceptAnswer").click();
+      toast("Connect ho raha hai…");
+    } else {
+      $("goOfferIn").value = code;
+      document.getElementById("goJoinBtn").click();
+      toast("Reply code ban raha hai…");
+    }
+  });
+
   /* ---------- boot ---------- */
   applyTheme();
+  showHome();
   soundLabel();
   $("goHapticState").textContent = settings.haptics ? "On" : "Off";
   paintAll();
